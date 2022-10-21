@@ -8,6 +8,8 @@ from .additional_settings.swagger_settings import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+BASE_DOMAIN = 'http://localhost:3000/Webshop'
+
 SECRET_KEY = os.environ.get('SECRET_KEY', 'L7HTf4$@jQXj1sRSrOqVokthx1vgd1Zdq7H&PeHPLKXD')
 
 DEBUG = int(os.environ.get('DEBUG', 0))
@@ -19,8 +21,15 @@ AUTH_USER_MODEL = 'main.User'
 SUPERUSER_EMAIL = os.environ.get('SUPERUSER_EMAIL', 'test@test.com')
 SUPERUSER_PASSWORD = os.environ.get('SUPERUSER_PASSWORD', 'tester26')
 
-MICROSERVICE_TITLE = os.environ.get('MICROSERVICE_TITLE', 'Template')
+MICROSERVICE_TITLE = os.environ.get('MICROSERVICE_TITLE', 'Payment')
 MICROSERVICE_PREFIX = os.environ.get('MICROSERVICE_PREFIX', '')
+
+PRODUCTS_API_URL = os.environ.get('PRODUCTS_API_URL')
+PRODUCTS_API_KEY = os.environ.get('PRODUCTS_API_KEY')
+
+STRIPE_PUBLIC_KEY = ""
+STRIPE_SECRET_KEY = ""
+STRIPE_WEBHOOK_SECRET = ""
 
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379')
 
@@ -61,6 +70,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'main.apps.MainConfig',
+    'payment.apps.PaymentConfig',
 ]
 
 INSTALLED_APPS += THIRD_PARTY_APPS + LOCAL_APPS
@@ -73,6 +83,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'main.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'defender.middleware.FailedLoginMiddleware',
@@ -84,7 +95,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework.authentication.SessionAuthentication',),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
-
 
 ROOT_URLCONF = 'src.urls'
 

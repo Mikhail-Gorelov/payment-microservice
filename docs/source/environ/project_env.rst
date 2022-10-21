@@ -7,7 +7,7 @@
      USE_HTTPS: 0
 
    services:
-     web:
+     payment:
        ports:
          - "9000:8000"
        environment:

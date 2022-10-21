@@ -5,7 +5,7 @@ x-variables: &variables
   USE_HTTPS: 0
 
 services:
-  web:
+  payment:
     build:
       context: .
       dockerfile: docker/prod/web/Dockerfile

@@ -36,3 +36,6 @@ sentry-sdk~=1.9
 
 # MicroService Requests
 django-microservice-request~=0.5
+
+# Payment system
+stripe==4.2.0
