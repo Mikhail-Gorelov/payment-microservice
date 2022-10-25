@@ -1,8 +1,12 @@
+from decimal import Decimal
+
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.generics import GenericAPIView
 import stripe
 from django.conf import settings
+from rest_framework.permissions import AllowAny
+
 from . import serializers
 from rest_framework.response import Response
 
@@ -12,23 +16,24 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class StripeIntentView(GenericAPIView):
+    permission_classes = (AllowAny,)
     serializer_class = serializers.StripeIntentSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        customer = stripe.Customer.create(**serializer.data)
-        service = ProductsService(request=request, url=f"/api/v1/product-variant/{kwargs.get('pk')}/")
-        response = service.service_response(method="get")
-        product = response.data
-        price = int(product.get('full_price') * 100)
+        customer = stripe.Customer.create(
+            email=serializer.data['email'],
+            phone=serializer.data['phone_number'],
+            metadata={
+                'user_id': serializer.data.get('user_id', 1)
+            }
+        )
+        price = int(Decimal(serializer.data['total_sum'])) * 100
         intent = stripe.PaymentIntent.create(
             amount=price,  # cents
-            currency=product['currency'].lower(),
-            customer=customer['id'],
-            metadata={
-                "product_id": product['id']
-            }
+            currency=serializer.data['currency'],
+            customer=customer['id']
         )
         return Response({'clientSecret': intent.get('client_secret')})
 
