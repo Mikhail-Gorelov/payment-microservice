@@ -5,7 +5,6 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.generics import GenericAPIView
 import stripe
 from django.conf import settings
-from rest_framework.permissions import AllowAny
 
 from . import serializers
 from rest_framework.response import Response
@@ -16,7 +15,6 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class StripeIntentView(GenericAPIView):
-    permission_classes = (AllowAny,)
     serializer_class = serializers.StripeIntentSerializer
 
     def post(self, request, *args, **kwargs):
@@ -98,6 +96,8 @@ def stripe_webhook(request):
         # Invalid signature
         return Response(status=400)
 
+    print(event['type'])
+
     # Handle the checkout.session.completed event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
@@ -105,10 +105,12 @@ def stripe_webhook(request):
         customer_email = session["customer_details"]["email"]
         product_id = session["metadata"]["product_id"]
 
+        # TODO: fix service problems
         service = ProductsService(request=request, url=f"/api/v1/product-variant/{product_id}/")
         response = service.service_response(method="get")
         product = response.data
 
+        # TODO: decide which mail I am going to use
         send_mail(
             subject="Here is your product",
             message=f"Thanks for your purchase. Here is the product you ordered. The name is {product.get('name')}",
@@ -131,6 +133,7 @@ def stripe_webhook(request):
         response = service.service_response(method="get")
         product = response.data
 
+        # TODO: decide which mail I am going to use
         send_mail(
             subject="Here is your product",
             message=f"Thanks for your purchase. Here is the product you ordered. The name is {product.get('name')}",

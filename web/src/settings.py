@@ -27,9 +27,9 @@ MICROSERVICE_PREFIX = os.environ.get('MICROSERVICE_PREFIX', '')
 PRODUCTS_API_URL = os.environ.get('PRODUCTS_API_URL')
 PRODUCTS_API_KEY = os.environ.get('PRODUCTS_API_KEY')
 
-STRIPE_PUBLIC_KEY = ""
-STRIPE_SECRET_KEY = ""
-STRIPE_WEBHOOK_SECRET = ""
+STRIPE_PUBLIC_KEY = "pk_test_51LuJlfAIxsPcOLbq9IvxlCokegATyzwzXZW6X7zfVSUYQbjN6RTiy3w5CuXJXChcjRIJkMNsOcTx2MlwSSl8uhFo00ZarDHU0f"
+STRIPE_SECRET_KEY = "sk_test_51LuJlfAIxsPcOLbqXjm7Tuarhfo1d34jtC1FnvBIqWknizEqAARZvzp6zQKG25PVhPsYV2tEemhlJUFL0W4bEaur00FVJG2xog"
+STRIPE_WEBHOOK_SECRET = "whsec_bf8c5df9ce15dbda2e1d1b0b72eb475942e9755acd10b1f59da7a2ad5b956986"
 
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379')
 
@@ -91,7 +91,7 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'DEFAULT_PERMISSION_CLASSES': ('microservice_request.permissions.HasApiKeyOrIsAuthenticated',),
     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework.authentication.SessionAuthentication',),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
@@ -174,8 +174,8 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale'),)
 
 LANGUAGES = (('en', _('English')),)
 
-SESSION_COOKIE_NAME = 'sessionid'
-CSRF_COOKIE_NAME = 'csrftoken'
+SESSION_COOKIE_NAME = 'sessionid_payment'
+CSRF_COOKIE_NAME = 'csrftoken_payment'
 
 ROSETTA_SHOW_AT_ADMIN_PANEL = DEBUG
 
