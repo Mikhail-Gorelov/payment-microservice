@@ -5,6 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.generics import GenericAPIView
 import stripe
 from django.conf import settings
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
 
 from . import serializers
 from rest_framework.response import Response
@@ -79,66 +81,69 @@ class CreateCheckoutSessionView(GenericAPIView):
         )
 
 
-@csrf_exempt
-def stripe_webhook(request):
-    payload = request.body
-    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
-    event = None
+class StripeWebhookView(APIView):
+    permission_classes = (AllowAny,)
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError as e:
-        # Invalid payload
-        return Response(status=400)
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        return Response(status=400)
+    @csrf_exempt
+    def post(self, request):
+        payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+        event = None
 
-    print(event['type'])
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+            )
+        except ValueError as e:
+            # Invalid payload
+            return Response(status=400)
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            return Response(status=400)
 
-    # Handle the checkout.session.completed event
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
+        print(event['type'])
 
-        customer_email = session["customer_details"]["email"]
-        product_id = session["metadata"]["product_id"]
+        # Handle the checkout.session.completed event
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
 
-        # TODO: fix service problems
-        service = ProductsService(request=request, url=f"/api/v1/product-variant/{product_id}/")
-        response = service.service_response(method="get")
-        product = response.data
+            customer_email = session["customer_details"]["email"]
+            product_id = session["metadata"]["product_id"]
 
-        # TODO: decide which mail I am going to use
-        send_mail(
-            subject="Here is your product",
-            message=f"Thanks for your purchase. Here is the product you ordered. The name is {product.get('name')}",
-            recipient_list=[customer_email],
-            from_email="webshop.project@yandex.ru"
-        )
+            # TODO: fix service problems
+            service = ProductsService(request=request, url=f"/api/v1/product-variant/{product_id}/")
+            response = service.service_response(method="get")
+            product = response.data
 
-        # TODO - decide whether you want to send the file or the URL
+            # TODO: decide which mail I am going to use
+            send_mail(
+                subject="Here is your product",
+                message=f"Thanks for your purchase. Here is the product you ordered. The name is {product.get('name')}",
+                recipient_list=[customer_email],
+                from_email="webshop.project@yandex.ru"
+            )
 
-    elif event["type"] == "payment_intent.succeeded":
-        intent = event['data']['object']
+            # TODO - decide whether you want to send the file or the URL
 
-        stripe_customer_id = intent["customer"]
-        stripe_customer = stripe.Customer.retrieve(stripe_customer_id)
+        elif event["type"] == "payment_intent.succeeded":
+            intent = event['data']['object']
 
-        customer_email = stripe_customer['email']
-        product_id = intent["metadata"]["product_id"]
+            stripe_customer_id = intent["customer"]
+            stripe_customer = stripe.Customer.retrieve(stripe_customer_id)
 
-        service = ProductsService(request=request, url=f"/api/v1/product-variant/{product_id}/")
-        response = service.service_response(method="get")
-        product = response.data
+            customer_email = stripe_customer['email']
+            product_id = intent["metadata"]["product_id"]
 
-        # TODO: decide which mail I am going to use
-        send_mail(
-            subject="Here is your product",
-            message=f"Thanks for your purchase. Here is the product you ordered. The name is {product.get('name')}",
-            recipient_list=[customer_email],
-            from_email="webshop.project@yandex.ru"
-        )
+            service = ProductsService(request=request, url=f"/api/v1/product-variant/{product_id}/")
+            response = service.service_response(method="get")
+            product = response.data
 
-    return Response(status=200)
+            # TODO: decide which mail I am going to use
+            send_mail(
+                subject="Here is your product",
+                message=f"Thanks for your purchase. Here is the product you ordered. The name is {product.get('name')}",
+                recipient_list=[customer_email],
+                from_email="webshop.project@yandex.ru"
+            )
+
+        return Response(status=200)
