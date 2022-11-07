@@ -44,7 +44,9 @@ class CreateCheckoutSessionView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        service = ProductsService(request=request, url=f"/api/v1/product-variant/{kwargs.get('pk')}/")
+        service = ProductsService(
+            request=request, url=f"/api/v1/product-variant/{serializer.data['product_variant_id']}/"
+        )
         response = service.service_response(method="get")
         product = response.data
         price = int(product.get('full_price') * 100)

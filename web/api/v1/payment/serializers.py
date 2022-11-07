@@ -19,4 +19,5 @@ class StripeIntentSerializer(serializers.Serializer):
 
 
 class CreateCheckoutSessionSerializer(serializers.Serializer):
-    quantity = serializers.IntegerField()
+    product_variant_id = serializers.IntegerField(min_value=1)
+    quantity = serializers.IntegerField(min_value=1)
